@@ -3,7 +3,7 @@ exports.addUserData = (req, res, next) => {
   req.user = {
     id: 123,
     nama: "User Karyawan",
-    role: "karyawan", // ubah ke "admin" untuk akses laporan
+    role: "admin", // ubah ke "admin" untuk akses laporan
   };
   next();
 };
