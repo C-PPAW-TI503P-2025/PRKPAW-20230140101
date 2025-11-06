@@ -1,37 +1,27 @@
 const express = require("express");
 const cors = require("cors");
-const app = express();
-const PORT = 3001;
 const morgan = require("morgan");
 
-// Impor router
-const presensiRoutes = require("./routes/presensi");
-const reportRoutes = require("./routes/reports");
-const ruteBuku = require("./routes/books"); // Rute dari modul sebelumnya (asumsi ada)
+const app = express();
+const PORT = 3001;
 
-// Application-level Middleware (Third-party)
-app.use(cors()); // Mengizinkan CORS (Cross-Origin Resource Sharing)
-app.use(express.json()); // Built-in: parsing body JSON
-// app.use(helmet()); // Middleware keamanan (tidak diaktifkan di sini untuk kesederhanaan, tapi bagus untuk digunakan)
-app.use(morgan("dev")); // Third-party: logging HTTP requests
+// Middleware
+app.use(cors());
+app.use(express.json());
+app.use(morgan("dev"));
 
-// Application-level Middleware (Custom)
-app.use(( req , res , next ) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
+// Import router
+const authRoutes = require("./routes/authRoutes");
 
-// Root Route
-app.get("/", ( req , res ) => {
+// Mount router
+app.use("/api/auth", authRoutes);
+
+// Root test
+app.get("/", (req, res) => {
   res.send("Home Page for API");
 });
 
-// Hubungkan Router dengan base path
-app.use("/api/books", ruteBuku); // Rute lama
-app.use("/api/presensi", presensiRoutes); // Rute Presensi
-app.use("/api/reports", reportRoutes); // Rute Laporan
-
+// Start server
 app.listen(PORT, () => {
-  // Ganti double quote (" ") dengan backtick (` `)
-  console.log(`Express server running at http://localhost:${PORT}/`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
