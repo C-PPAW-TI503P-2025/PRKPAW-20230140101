@@ -10,15 +10,14 @@ const { authenticateToken } = require("../middleware/permissionMiddleware");
 // Validasi untuk UPDATE Presensi
 // ============================
 const updatePresensiValidation = [
-  body("checkIn")
-    .optional({ nullable: true, checkFalsy: true })
-    .isISO8601()
-    .withMessage("Format waktu checkIn harus berupa tanggal/waktu yang valid (ISO8601)."),
-
-  body("checkOut")
-    .optional({ nullable: true, checkFalsy: true })
-    .isISO8601()
-    .withMessage("Format waktu checkOut harus berupa tanggal/waktu yang valid (ISO8601)."),
+    body("checkIn")
+        .optional({ nullable: true, checkFalsy: true })
+        .isISO8601()
+        .withMessage("Format waktu checkIn harus berupa tanggal/waktu yang valid (ISO8601)."),
+    body("checkOut")
+        .optional({ nullable: true, checkFalsy: true })
+        .isISO8601()
+        .withMessage("Format waktu checkOut harus berupa tanggal/waktu yang valid (ISO8601)."),
 ];
 
 // ============================
@@ -27,8 +26,12 @@ const updatePresensiValidation = [
 router.use(authenticateToken); // Semua route berikut membutuhkan token valid
 
 // --- Rute Presensi ---
-// Check-In
-router.post("/checkin", presensiController.checkIn);
+// Check-In (dengan upload foto)
+router.post(
+    "/checkin",
+    presensiController.upload, // multer sudah .single('buktiFoto') di controller
+    presensiController.checkIn
+);
 
 // Check-Out
 router.post("/checkout", presensiController.checkOut);
