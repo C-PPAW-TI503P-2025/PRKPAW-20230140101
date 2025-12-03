@@ -11,12 +11,17 @@ module.exports = {
       },
       userId: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        allowNull: false,
+        // Menambahkan relasi (Foreign Key) ke tabel Users
+        references: {
+          model: 'Users', // Nama tabel yang direferensikan (asumsi nama tabel pengguna adalah 'Users')
+          key: 'id'      // Kolom di tabel Users yang direferensikan
+        },
+        // Opsi cascade untuk update dan delete
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE'
       },
-      nama: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
+      // Kolom 'nama' telah dihapus sesuai instruksi
       checkIn: {
         allowNull: false,
         type: Sequelize.DATE
@@ -39,4 +44,3 @@ module.exports = {
     await queryInterface.dropTable('Presensis');
   }
 };
-

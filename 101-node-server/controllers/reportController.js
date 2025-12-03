@@ -1,50 +1,74 @@
-// reportController.js
-
-const presensiRecords = require("../data/presensiData");
-const { Presensi } = require("../models");
-const { Op } = require("sequelize"); // Pastikan Op sudah di-import
+const { Presensi, User } = require("../models");
+const { Op } = require("sequelize");
 
 exports.getDailyReport = async (req, res) => {
   try {
-    // 1. Ambil parameter nama, tanggalMulai, dan tanggalSelesai
     const { nama, tanggalMulai, tanggalSelesai } = req.query;
-    let options = { where: {} };
-    
-    // Filter berdasarkan nama (Kode yang sudah ada)
+
+    const options = {
+      where: {},
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: ["id", "nama", "email"],
+          where: {}
+        }
+      ],
+      order: [["id", "DESC"]]
+    };
+
+    // Filter nama
     if (nama) {
-      options.where.nama = {
-        [Op.like]: `%${nama}%`,
+      options.include[0].where.nama = {
+        [Op.like]: `%${nama}%`
       };
     }
 
-    // 2. Logika Filter Berdasarkan Rentang Tanggal
+    // Filter tanggal (PAKAI KOLOM 'tanggal', BUKAN createdAt)
     if (tanggalMulai && tanggalSelesai) {
-     
-      options.where.createdAt = {
-        [Op.between]: [new Date(tanggalMulai), new Date(tanggalSelesai)],
+      options.where.tanggal = {
+        [Op.between]: [tanggalMulai, tanggalSelesai]
+      };
+    } else if (tanggalMulai) {
+      options.where.tanggal = {
+        [Op.gte]: tanggalMulai
+      };
+    } else if (tanggalSelesai) {
+      options.where.tanggal = {
+        [Op.lte]: tanggalSelesai
       };
     }
-    // Opsi tambahan jika hanya satu tanggal yang diberikan (walaupun tidak wajib di tugas, ini praktik yang baik)
-    else if (tanggalMulai) {
-        options.where.createdAt = {
-            [Op.gte]: new Date(tanggalMulai), // Lebih besar dari atau sama dengan
-        };
-    } else if (tanggalSelesai) {
-        options.where.createdAt = {
-            [Op.lte]: new Date(tanggalSelesai), // Lebih kecil dari atau sama dengan
-        };
-    }
 
+    // Ambil data
     const records = await Presensi.findAll(options);
 
+    // Format frontend perlu checkIn & checkOut (CamelCase)
+    const formatted = records.map(r => ({
+      id: r.id,
+      checkIn: r.check_in,
+      checkOut: r.check_out,
+      user: r.user
+        ? {
+            id: r.user.id,
+            nama: r.user.nama,
+            email: r.user.email
+          }
+        : null
+    }));
+
     res.json({
-      reportDate: new Date().toLocaleDateString(),
-      filterApplied: { nama, tanggalMulai, tanggalSelesai },
-      data: records,
+      status: true,
+      count: formatted.length,
+      data: formatted
     });
+
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Gagal mengambil laporan", error: error.message });
+    console.error("Report error:", error);
+    res.status(500).json({
+      status: false,
+      message: "Gagal mengambil laporan",
+      error: error.message
+    });
   }
 };

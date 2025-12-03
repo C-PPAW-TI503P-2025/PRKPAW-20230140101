@@ -1,8 +1,13 @@
 const { User } = require('../models');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');	
-const JWT_SECRET = 'INI_ADALAH_KUNCI_RAHASIA_ANDA_YANG_SANGAT_AMAN';
+const jwt = require('jsonwebtoken');
 
+// JWT secret yang sama digunakan di login dan middleware
+const JWT_SECRET = 'RAHASIA_SUPER_AMAN'; // ganti sesuai preferensi
+
+// ============================
+// Register User
+// ============================
 exports.register = async (req, res) => {
   try {
     const { nama, email, password, role } = req.body;
@@ -15,12 +20,13 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: "Role tidak valid. Harus 'mahasiswa' atau 'admin'." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = await User.create({
       nama,
       email,
       password: hashedPassword,
-      role: role || 'mahasiswa' 
+      role: role || 'mahasiswa'
     });
 
     res.status(201).json({
@@ -32,11 +38,14 @@ exports.register = async (req, res) => {
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({ message: "Email sudah terdaftar." });
     }
+    console.error("Register error:", error);
     res.status(500).json({ message: "Terjadi kesalahan pada server", error: error.message });
   }
 };
 
-
+// ============================
+// Login User
+// ============================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -51,22 +60,16 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: "Password salah." });
     }
 
-    const payload = {
-      id: user.id,
-      nama: user.nama,
-      role: user.role 
-    };
+    const payload = { id: user.id, nama: user.nama, role: user.role };
 
-    const token = jwt.sign(payload, JWT_SECRET, {
-      expiresIn: '1h' 
-    });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
-    res.json({
-      message: "Login berhasil",
-      token: token 
-    });
+    res.json({ message: "Login berhasil", token });
 
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: "Terjadi kesalahan pada server", error: error.message });
   }
 };
+
+module.exports.JWT_SECRET = JWT_SECRET; // Ekspor untuk digunakan di middleware

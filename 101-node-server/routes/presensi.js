@@ -1,12 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const presensiController = require("../controllers/presensiController");
 const { body } = require("express-validator");
+const presensiController = require("../controllers/presensiController");
 
-// ✅ Gunakan middleware autentikasi JWT yang benar
-const { authenticateToken } = require("../middleware/authMiddleware");
+// Middleware autentikasi JWT
+const { authenticateToken } = require("../middleware/permissionMiddleware");
 
-// ✅ Validasi untuk UPDATE Presensi
+// ============================
+// Validasi untuk UPDATE Presensi
+// ============================
 const updatePresensiValidation = [
   body("checkIn")
     .optional({ nullable: true, checkFalsy: true })
@@ -19,14 +21,17 @@ const updatePresensiValidation = [
     .withMessage("Format waktu checkOut harus berupa tanggal/waktu yang valid (ISO8601)."),
 ];
 
-// ✅ Semua rute di bawah ini wajib login dulu (JWT)
-router.use(authenticateToken);
+// ============================
+// Semua rute di bawah wajib login (JWT)
+// ============================
+router.use(authenticateToken); // Semua route berikut membutuhkan token valid
 
 // --- Rute Presensi ---
+// Check-In
+router.post("/checkin", presensiController.checkIn);
 
-// Check-In & Check-Out
-router.post("/checkin", presensiController.CheckIn);
-router.post("/checkout", presensiController.CheckOut);
+// Check-Out
+router.post("/checkout", presensiController.checkOut);
 
 // Update Presensi
 router.put("/:id", updatePresensiValidation, presensiController.updatePresensi);
